@@ -31,6 +31,7 @@ from keras.models import Sequential, Model
 from keras.optimizers import Adam
 from keras.utils.generic_utils import Progbar
 import numpy as np
+import wandb
 
 from keras.backend.tensorflow_backend import set_session
 config = tf.ConfigProto()
@@ -104,6 +105,7 @@ def get_args():
 
     parser.add_argument('-Dec_weight', type=str, default='default')
 
+    parser.add_argument('-tags', nargs='*')
 
     args = parser.parse_args()
     print args
@@ -290,6 +292,15 @@ def test(args, dec_weight):
 if __name__ == '__main__':
 
     args = get_args()
+
+    # Initialize wandb
+    wandb.init(
+        entity="data-frugal-learning",
+        project="rnn-decoder",
+        tags=args.tags,
+        config=vars(args),
+        save_code=True,
+    )        
 
     train(args)
     test(args, dec_weight='./tmp/conv_dec'+args.id+'.h5')
