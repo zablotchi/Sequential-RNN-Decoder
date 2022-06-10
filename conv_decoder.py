@@ -105,7 +105,7 @@ def get_args():
 
     parser.add_argument('-Dec_weight', type=str, default='default')
 
-    parser.add_argument('-tags', nargs='*')
+    parser.add_argument('-tags', nargs='*', default=['test'])
 
     args = parser.parse_args()
     print args
@@ -149,6 +149,10 @@ def build_decoder(args):
     decode = TimeDistributed(Dense(1, activation='sigmoid'), trainable=ont_pretrain_trainable, name = 'Dec_fc')(combined_x)  #sigmoid
 
     return Model(input_x, decode)
+
+class CustomCallback(keras.callbacks.Callback):
+    def on_epoch_end(self, epoch, logs=None):
+        wandb.log(logs)
 
 def train(args):
 
@@ -198,7 +202,7 @@ def train(args):
     model.summary()
 
     model.fit(X_conv_train,X_train, validation_data=(X_conv_test, X_test),
-              callbacks = [change_lr],
+              callbacks = [change_lr, CustomCallback()],
               batch_size=args.batch_size, epochs=args.num_epoch)
 
     model.save_weights('./tmp/conv_dec'+args.id+'.h5')
@@ -285,8 +289,16 @@ def test(args, dec_weight):
     print 'BER:',ber
     print 'BLER:',bler
 
+    wandb.log({
+        "test_perf_table": wandb.Table(
+            columns=["SNR", "BER", "BLER"],
+            data=[[a, b, c] for a, b, c in zip(SNRS_dB, ber, bler)],
+        )
+    })
 
-
+    for snr, b, bl in zip(SNRS_dB, ber, bler):
+        wandb.summary["ber_{}".format(snr)] = b
+        wandb.summary["bler_{}".format(snr)] = bl
 
 
 if __name__ == '__main__':
