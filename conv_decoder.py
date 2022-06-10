@@ -105,6 +105,7 @@ def get_args():
 
     parser.add_argument('-Dec_weight', type=str, default='default')
 
+    parser.add_argument('-patience', type=int, default=20000, help='in terms of num_block')
     parser.add_argument('-tags', nargs='*', default=['test'])
 
     args = parser.parse_args()
@@ -201,8 +202,20 @@ def train(args):
     model.compile(loss=args.loss,  optimizer=optimizer, metrics=[errors])
     model.summary()
 
+    def ceil_div(a, b):
+        return (a + b - 1) / b
+
+    patience_epochs = max(2, ceil_div(args.patience, args.num_block))
+    wandb.summary["patience_epochs"] = patience_epochs
+    early_stop_callback = tf.keras.callbacks.EarlyStopping(
+        monitor="loss",
+        patience=patience_epochs,
+        verbose=1,
+        mode="auto"
+    )
+
     model.fit(X_conv_train,X_train, validation_data=(X_conv_test, X_test),
-              callbacks = [change_lr, CustomCallback()],
+              callbacks = [change_lr, CustomCallback(), early_stop_callback],
               batch_size=args.batch_size, epochs=args.num_epoch)
 
     model.save_weights('./tmp/conv_dec'+args.id+'.h5')
