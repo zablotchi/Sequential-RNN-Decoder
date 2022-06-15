@@ -79,6 +79,7 @@ def get_args():
     parser.add_argument('-num_block', type=int, default=5000)
     parser.add_argument('-block_len', type=int, default=100)
     parser.add_argument('-test_ratio',  type=int, default=10)
+    parser.add_argument('-test_num_block', type=int, default=10000)
 
     parser.add_argument('-num_Dec_layer',  type=int, default=2)
     parser.add_argument('-num_Dec_unit',  type=int, default=500)
@@ -158,10 +159,12 @@ class CustomCallback(keras.callbacks.Callback):
 def train(args):
 
     X_train_raw = np.random.randint(0,2,args.block_len * args.num_block)
-    X_test_raw  = np.random.randint(0,2,args.block_len * args.num_block/args.test_ratio)
+    # X_test_raw  = np.random.randint(0,2,args.block_len * args.num_block/args.test_ratio)
+    X_test_raw  = np.random.randint(0,2,args.block_len * args.test_num_block)
 
     X_train = X_train_raw.reshape((args.num_block, args.block_len, 1))
-    X_test  = X_test_raw.reshape((args.num_block/args.test_ratio, args.block_len, 1))
+    # X_test  = X_test_raw.reshape((args.num_block/args.test_ratio, args.block_len, 1))
+    X_test  = X_test_raw.reshape((args.test_num_block, args.block_len, 1))
 
     X_conv_train = 2.0*conv_enc(X_train, args) - 1.0
     X_conv_test  = 2.0*conv_enc(X_test, args)  - 1.0
@@ -221,8 +224,11 @@ def train(args):
     model.save_weights('./tmp/conv_dec'+args.id+'.h5')
 
 def test(args, dec_weight):
-    X_test_raw  = np.random.randint(0,2,args.num_block*args.block_len/args.test_ratio)
-    X_test  = X_test_raw.reshape((args.num_block/args.test_ratio, args.block_len, 1))
+    # X_test_raw  = np.random.randint(0,2,args.num_block*args.block_len/args.test_ratio)
+    X_test_raw  = np.random.randint(0,2,args.test_num_block*args.block_len)
+
+    # X_test  = X_test_raw.reshape((args.num_block/args.test_ratio, args.block_len, 1))
+    X_test  = X_test_raw.reshape((args.test_num_block, args.block_len, 1))
     X_conv_test  = 2.0*conv_enc(X_test, args)  - 1.0
 
     #print 'Testing before fine-tuning'
