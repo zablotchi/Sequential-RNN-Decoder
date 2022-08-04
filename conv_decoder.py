@@ -100,7 +100,7 @@ def get_args():
     parser.add_argument('-loss', choices = ['binary_crossentropy', 'mean_squared_error'], default = 'mean_squared_error')
 
     parser.add_argument('-train_channel_low', type=float, default=0.0)
-    parser.add_argument('-train_channel_high', type=float, default=8.0)
+    parser.add_argument('-train_channel_high', type=float, default=0.0)
 
     parser.add_argument('-id', type=str, default=str(np.random.random())[2:8])
 
@@ -291,7 +291,7 @@ def test(args, dec_weight):
         model_test.load_weights(dec_weight, by_name=True)
 
         pd       = model_test.predict(X_conv_test, verbose=0)
-        decoded_bits = np.round(pd)
+        decoded_bits = np.round(pd) # convert from probabilities to bits
         ber_err_rate  = sum(sum(sum(abs(decoded_bits-X_test))))*1.0/(X_test.shape[0]*X_test.shape[1])# model.evaluate(X_feed_test, X_message_test, batch_size=10)
         tp0 = (abs(decoded_bits-X_test)).reshape([X_test.shape[0],X_test.shape[1]])
         bler_err_rate = sum(np.sum(tp0,axis=1)>0)*1.0/(X_test.shape[0])
